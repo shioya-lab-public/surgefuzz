@@ -1,0 +1,12 @@
+diff --git src/main/scala/naxriscv/misc/CommitPlugin.scala src/main/scala/naxriscv/misc/CommitPlugin.scala
+index b573e4c..bb28946 100644
+--- src/main/scala/naxriscv/misc/CommitPlugin.scala
++++ src/main/scala/naxriscv/misc/CommitPlugin.scala
+@@ -177,6 +177,7 @@ class CommitPlugin(var commitCount : Int,
+       reschedulePort.reason    := reschedule.reason
+       reschedulePort.skipCommit := reschedule.skipCommit
+ 
++      val branchMiss = rescheduleHit & (reschedule.reason === ScheduleReason.BRANCH) addAttribute("SURGE_FREQ")
+ 
+       val head = UInt(ROB.ID_WIDTH bits)
+       val headNext = CombInit(head)

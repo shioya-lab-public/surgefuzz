@@ -1,0 +1,207 @@
+diff --git a/Processor/Src/SysDeps/Verilator/TestMain.cpp b/Processor/Src/SysDeps/Verilator/TestMain.cpp
+index 2a1d822..8ca8ff1 100644
+--- a/Processor/Src/SysDeps/Verilator/TestMain.cpp
++++ b/Processor/Src/SysDeps/Verilator/TestMain.cpp
+@@ -12,6 +12,7 @@
+ #include <fstream>
+ #include <iostream>
+ 
++#include "fuzz_driver.hpp"
+ 
+ using namespace std;
+ 
+@@ -21,42 +22,6 @@ double sc_time_stamp () {       // Called by $time in Verilog
+     return main_time;
+ }
+ 
+-int GetCommittedRegisterValue(
+-    VMain_Zynq_Wrapper* top,
+-    int commitNumInThisCycle,
+-    DataPath* regData
+-){
+-    auto* core = top->Main_Zynq_Wrapper->main->core;
+-    auto* helper = top->VerilatorHelper;
+-    static const int LSCALAR_NUM = helper->LSCALAR_NUM;
+-
+-    typeof (core->retirementRMT->regRMT->debugValue) phyRegNum;
+-
+-    // Copy RMT to local variable.
+-    for (int i = 0; i < LSCALAR_NUM; i++) {
+-        phyRegNum[i] = core->retirementRMT->regRMT->debugValue[i];
+-    }
+-
+-    // Update RRMT
+-    //ActiveListIndexPath alHeadPtr;
+-    auto alHeadPtr = core->activeList->headPtr;
+-    for (int i = 0; i < commitNumInThisCycle; i++) {
+-        // ActiveListEntry alHead;
+-        const auto& alHead = core->activeList->activeList->debugValue[alHeadPtr];
+-        if (helper->ActiveListEntry_writeReg(alHead)) {
+-            phyRegNum[helper->ActiveListEntry_logDstRegNum(alHead)] = helper->ActiveListEntry_phyDstRegNum(alHead);
+-        }
+-        alHeadPtr++;
+-    }
+-
+-    // Get regData
+-    for(int i = 0; i < LSCALAR_NUM; i++) {
+-        regData[i] = core->registerFile->phyReg->debugValue[phyRegNum[i]];
+-    }
+-    
+-    return 0;
+-}
+-
+ 
+ int main(int argc, char** argv) {
+ 
+@@ -126,21 +91,6 @@ int main(int argc, char** argv) {
+     }
+ #endif
+ 
+-    // Initialize dumpers
+-    bool enableDumpKanata = false;
+-    KanataDumper kanataDumper;
+-    if (RSD_LOG_FILE != "") {
+-        enableDumpKanata = true;
+-        kanataDumper.Open(RSD_LOG_FILE);
+-    }
+-
+-    bool enableDumpRegCSV = false;
+-    RegisterFileCSV_Dumper registerFileCSV_Dumper;
+-    if (REG_CSV_FILE != "") {
+-        enableDumpRegCSV = true;
+-        registerFileCSV_Dumper.Open(REG_CSV_FILE);
+-    }
+-
+     string codeFileName = TEST_CODE + "/" + "code.hex";
+     string regOutFileName = TEST_CODE + "/" + "reg.out.hex";
+     string serialDumpFileName = TEST_CODE + "/" + "serial.out.txt";
+@@ -212,19 +162,17 @@ int main(int argc, char** argv) {
+     int numCommittedARM_Op = 0;
+     int numCommittedMicroOp = 0;
+     LED_Path lastCommittedPC = 0;
+-    DebugRegister debugRegister;
+-    memset(&debugRegister, 0x0, sizeof(DebugRegister));
+ 
+ 
+     // TestBenchClockGenerator にあわせる
+     const int RSD_STEP = 8;   
+-    const int RSD_KANATA_CYCLE_DISPLACEMENT = -1;
+     const int RSD_INITIALIZATION_CYCLE = 8;
+     int64_t cycle = -1;
+-    int64_t kanataCycle = cycle - RSD_KANATA_CYCLE_DISPLACEMENT;
+ 
+     bool start = false; // タイミングを TestMain.sv にあわせるため
+ 
++    RegisterRecorder recorder("/out/profile/dependents.csv");
++
+     try{
+ 
+         top->negResetIn = 0;        // Set some inputs
+@@ -251,51 +199,8 @@ int main(int argc, char** argv) {
+ #endif
+             // 実行が開始されていたらクロックをインクリメント
+             if (top->clk_p && start){
+-                kanataCycle++;
+                 cycle++;
+ 
+-                // ダンプ
+-                GetDebugRegister(&debugRegister, top);
+-                if (!SHOW_SERIAL_OUT && (kanataCycle < 10000 || kanataCycle % 10000 == 0)){
+-                    printf("%d cycle, %d KanataCycle, %d ns\n", (uint32_t)cycle, (uint32_t)kanataCycle, (uint32_t)main_time);
+-                }
+-
+-                serialDumper.CheckSignal(
+-                    top->serialWE, 
+-                    top->serialWriteData
+-                );
+-
+-                // Dump RSD.log for Kanata
+-                if (enableDumpKanata){
+-                    kanataDumper.DumpCycle(debugRegister);
+-                }
+-
+-                if (enableDumpRegCSV) {
+-                    registerFileCSV_Dumper.ProceedCycle();
+-
+-                    for (int i = 0; i < COMMIT_WIDTH; i++) {
+-                        // 1命令ずつコミットを追ってレジスタ状態をダンプする
+-                        if (core->cmStage->commit[i]) {
+-                            DataPath regData[LSCALAR_NUM];
+-                            GetCommittedRegisterValue(top, i, regData);
+-                            registerFileCSV_Dumper.Dump(
+-                                helper->ActiveListEntry_pc(core->cmStage->alReadData[i]),
+-                                regData
+-                            );
+-                        }
+-                    }
+-                }
+-
+-                // Count number of committed Ops.
+-                for (int i = 0; i < COMMIT_WIDTH; i++) {
+-                    if (debugRegister.cmReg[i].commit) {
+-                        numCommittedMicroOp += 1;
+-                        if ( debugRegister.cmReg[i].opId.mid == 0 ){
+-                            numCommittedARM_Op += 1;
+-                        }
+-                    }
+-                }
+-
+                 // Check end of simulation.
+                 if (ENABLE_PC_GOAL) {
+                     lastCommittedPC = top->ledOut;
+@@ -305,6 +210,8 @@ int main(int argc, char** argv) {
+                         break;
+                     }
+                 }
++
++                recorder.call_per_one_cycle(core->coverage_target, core->fuzz_ancestors, cycle);
+             }
+             start = !top->posResetOut;
+ 
+@@ -323,46 +230,6 @@ int main(int argc, char** argv) {
+ 
+     }
+ 
+-    // Count the number of commit in the last cycle.
+-    int commitNumInLastCycle = 0;
+-    for (int count = 0; count < COMMIT_WIDTH; count++) {
+-        if (!core->cmStage->commit[count])
+-            break;
+-        commitNumInLastCycle++;
+-    }   
+-
+-    // Close Dumpers
+-    //serialDumper.DumpToFile(serialDumpFileName);
+-    serialDumper.Close();
+-    kanataDumper.Close();
+-    registerFileCSV_Dumper.Close();
+-
+-    // Simulation Result
+-    printf("Num of I$ misses: %d\n", debugRegister.perfCounter.numIC_Miss);
+-    printf("Num of D$ load misses: %d\n", debugRegister.perfCounter.numLoadMiss);
+-    printf("Num of D$ store misses: %d\n", debugRegister.perfCounter.numStoreMiss);
+-    printf("Num of branch prediction misses: %d\n", debugRegister.perfCounter.numBranchPredMiss);
+-    printf("Num of branch prediction misses detected on decode: %d\n", debugRegister.perfCounter.numBranchPredMissDetectedOnDecode);
+-    printf("Num of store-load-forwanind misses: %d\n", debugRegister.perfCounter.numStoreLoadForwardingFail);
+-    printf("Num of memory dependency prediction misses: %d\n", debugRegister.perfCounter.numMemDepPredMiss);
+-
+-    printf("Num of committed RISC-V-ops: %d\n", numCommittedARM_Op);
+-    printf("Num of committed micro-ops: %d\n", numCommittedMicroOp);
+-    if (cycle != 0) {
+-        printf("IPC (RISC-V instruction): %f\n", (double)numCommittedARM_Op / (double)cycle);
+-        printf("IPC (micro-op): %f\n", (double)numCommittedMicroOp / (double)cycle);
+-    }
+-    printf("Elapsed cycles: %d\n", (int32_t)cycle);
+-
+-    // Dump Register File
+-    RegisterFileHexDumper registerFileHexDumper;
+-    DataPath regData[LSCALAR_NUM];
+-    GetCommittedRegisterValue(top, commitNumInLastCycle, regData);
+-    registerFileHexDumper.Open(regOutFileName);
+-    registerFileHexDumper.Dump(lastCommittedPC, regData);
+-    registerFileHexDumper.Close();
+-
+-
+ #ifdef RSD_VERILATOR_TRACE
+     if (tfp) {
+         tfp->close();

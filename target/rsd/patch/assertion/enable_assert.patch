@@ -1,0 +1,17 @@
+diff --git a/Processor/Src/BasicMacros.sv b/Processor/Src/BasicMacros.sv
+index 4eeae62..cbd067f 100644
+--- a/Processor/Src/BasicMacros.sv
++++ b/Processor/Src/BasicMacros.sv
+@@ -20,10 +20,8 @@
+ `else
+     `define RSD_ASSERT_CLK_FMT(clk, exp, msg) \
+         always @(posedge clk) begin \
+-            if (!(exp)) begin \
+-                $display msg; \
+-            end \
+-        end 
++            assert (exp); \
++        end
+     `define RSD_ASSERT_CLK(clk, exp, msg) `RSD_ASSERT_CLK_FMT(clk, exp, (msg))
+ `endif
+ 

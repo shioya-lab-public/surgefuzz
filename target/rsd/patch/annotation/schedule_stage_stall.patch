@@ -1,0 +1,14 @@
+diff --git rsd/Processor/Src/Pipeline/ScheduleStage.sv rsd/Processor/Src/Pipeline/ScheduleStage.sv
+index f201e97..c469f1f 100644
+--- rsd/Processor/Src/Pipeline/ScheduleStage.sv
++++ rsd/Processor/Src/Pipeline/ScheduleStage.sv
+@@ -21,7 +21,8 @@ module ScheduleStage(
+     ControllerIF.ScheduleStage ctrl
+ );
+     // Pipeline controll
+-    logic stall, clear;
++    (* SURGE_CONSEC *) logic stall;
++    logic clear;
+     logic flush [ ISSUE_WIDTH ];
+     logic valid [ ISSUE_WIDTH ];
+     logic update [ ISSUE_WIDTH ];

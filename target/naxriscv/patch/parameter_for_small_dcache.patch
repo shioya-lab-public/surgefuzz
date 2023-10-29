@@ -1,0 +1,15 @@
+diff --git src/main/scala/naxriscv/Gen.scala src/main/scala/naxriscv/Gen.scala
+index 3e676ae..a89a499 100644
+--- src/main/scala/naxriscv/Gen.scala
++++ src/main/scala/naxriscv/Gen.scala
+@@ -213,8 +213,8 @@ object Config{
+       )
+       plugins += new DataCachePlugin(
+         memDataWidth = 64,
+-        cacheSize    = 4096*4,
+-        wayCount     = 4,
++        cacheSize    = 256*4,
++        wayCount     = 4,
+         refillCount = 2,
+         writebackCount = 2,
+         tagsReadAsync = withDistributedRam,

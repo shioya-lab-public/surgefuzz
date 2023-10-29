@@ -1,0 +1,5 @@
+matplotlib==3.8.0
+minepy==1.2.6
+pandas==2.1.1
+scikit-learn==1.3.2
+scipy==1.11.3

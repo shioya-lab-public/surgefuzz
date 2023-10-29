@@ -1,0 +1,29 @@
+--- RAM.v	2022-06-25 10:50:47.000000000 +0900
++++ RAM_with_comment.v	2022-06-26 22:16:35.466170626 +0900
+@@ -266,7 +266,7 @@
+ 			GetHexArrayIndexFromAddress = addr;
+ 	endfunction
+ 	localparam HEX_FILE_ARRAY_ENTRY_NUM = 1 << HEX_FILE_INDEX_BIT_SIZE;
+-	reg [127:0] array [0:HEX_FILE_ARRAY_ENTRY_NUM - 1];
++	reg [127:0] array [0:HEX_FILE_ARRAY_ENTRY_NUM - 1] /*verilator public*/ ;
+ 	reg [INDEX_BIT_SIZE - 1:0] raReg;
+ 	reg [HEX_FILE_INDEX_BIT_SIZE - 1:0] hexFileRA;
+ 	reg [127:0] hexFileRV;
+@@ -784,7 +784,7 @@
+ 			);
+ 		end
+ 	endgenerate
+-	reg [ENTRY_BIT_SIZE - 1:0] debugValue [0:ENTRY_NUM - 1];
++	reg [ENTRY_BIT_SIZE - 1:0] debugValue [0:ENTRY_NUM - 1] /*verilator public*/ ;
+ 	always @(posedge clk) begin : sv2v_autoblock_1
+ 		reg signed [31:0] i;
+ 		for (i = 0; i < WRITE_NUM; i = i + 1)
+@@ -897,7 +897,7 @@
+ 			);
+ 		end
+ 	endgenerate
+-	reg [ENTRY_BIT_SIZE - 1:0] debugValue [0:ENTRY_NUM - 1];
++	reg [ENTRY_BIT_SIZE - 1:0] debugValue [0:ENTRY_NUM - 1] /*verilator public*/ ;
+ 	initial begin : sv2v_autoblock_1
+ 		reg signed [31:0] i;
+ 		for (i = 0; i < ENTRY_NUM; i = i + 1)

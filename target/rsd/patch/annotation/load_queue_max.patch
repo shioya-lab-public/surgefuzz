@@ -1,0 +1,13 @@
+diff --git a/Processor/Src/LoadStoreUnit/LoadQueue.sv b/Processor/Src/LoadStoreUnit/LoadQueue.sv
+index df0ca1e..89c0935 100644
+--- a/Processor/Src/LoadStoreUnit/LoadQueue.sv
++++ b/Processor/Src/LoadStoreUnit/LoadQueue.sv
+@@ -38,7 +38,7 @@ module LoadQueue(
+     // FIFO controller.
+     logic push; // push request.
+     RenameLaneCountPath pushCount;  // pushed count.
+-    LoadQueueCountPath curCount;    // current size.
++    (* SURGE_COUNT *) LoadQueueCountPath curCount;    // current size.
+     SetTailMultiWidthQueuePointer #(LOAD_QUEUE_ENTRY_NUM, 0, 0, 0, RENAME_WIDTH, COMMIT_WIDTH)
+         loadQueuePointer(
+             .clk(port.clk),

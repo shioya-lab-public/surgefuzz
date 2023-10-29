@@ -1,0 +1,17 @@
+diff --git a/Processor/Src/ResetController.sv b/Processor/Src/ResetController.sv
+index 6127200..31995ff 100644
+--- a/Processor/Src/ResetController.sv
++++ b/Processor/Src/ResetController.sv
+@@ -16,7 +16,11 @@ module ResetController #(
+         // --- rst
+         // - rstTriggerがアサートされた後、
+         //   CYCLE_OF_RESET_SEQUENCEサイクルの間アサートされ続ける
+-        if ( rstTrigger || !locked ) begin
++        if ( rstTrigger) begin
++            count <= 0;
++            rst <= TRUE;
++        end
++        else if ( !locked ) begin
+             count <= 0;
+             rst <= TRUE;
+         end

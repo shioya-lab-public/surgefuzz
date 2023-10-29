@@ -1,0 +1,18 @@
+diff --git src/main/scala/exu/core.scala src/main/scala/exu/core.scala
+index b267c020..bc8ef72c 100644
+--- src/main/scala/exu/core.scala
++++ src/main/scala/exu/core.scala
+@@ -1328,6 +1328,13 @@ class BoomCore(usingTrace: Boolean)(implicit p: Parameters) extends BoomModule
+   //-------------------------------------------------------------
+   //-------------------------------------------------------------
+ 
++  val fuzz_debug_pc = dontTouch(Wire(UInt(vaddrBits.W)))
++  when (rob.io.commit.arch_valids(0)) {
++    fuzz_debug_pc := rob.io.commit.uops(0).debug_pc(vaddrBits-1,0)
++  } .otherwise {
++    fuzz_debug_pc := 0x77777777L.U
++  }
++  assert(fuzz_debug_pc <= 0xffffffffL.U)
+ 
+   if (COMMIT_LOG_PRINTF) {
+     var new_commit_cnt = 0.U

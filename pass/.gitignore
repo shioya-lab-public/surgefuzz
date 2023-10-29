@@ -1,0 +1,5 @@
+*.d
+*.so
+
+out.v
+out.log

@@ -1,0 +1,15 @@
+diff --git src/main/scala/naxriscv/lsu/LsuPlugin.scala src/main/scala/naxriscv/lsu/LsuPlugin.scala
+index 9afe631..57bae00 100644
+--- src/main/scala/naxriscv/lsu/LsuPlugin.scala
++++ src/main/scala/naxriscv/lsu/LsuPlugin.scala
+@@ -516,6 +516,10 @@ class LsuPlugin(var lqSize: Int,
+         def isFull(ptr : UInt) = (ptr ^ free) === lqSize
+         val priority = Reg(Bits(lqSize-1 bits)) init(0) //TODO check it work properly
+         val priorityLast = RegNext(priority)
++
++        val usageNext = UInt(log2Up(lqSize+1) bits)
++        val usage = RegNext(usageNext) init (0) addAttribute("SURGE_COUNT")
++        usageNext := alloc - free
+       }
+ 
+       val tracker = new Area{

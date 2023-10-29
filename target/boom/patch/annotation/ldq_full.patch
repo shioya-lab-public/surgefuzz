@@ -1,0 +1,34 @@
+diff --git src/main/scala/lsu/lsu.scala src/main/scala/lsu/lsu.scala
+index 1f17835d..ee7a89ba 100644
+--- src/main/scala/lsu/lsu.scala
++++ src/main/scala/lsu/lsu.scala
+@@ -46,6 +46,9 @@ package boom.lsu
+ import chisel3._
+ import chisel3.util._
+ 
++import chisel3.experimental.{ChiselAnnotation, annotate}
++import firrtl.AttributeAnnotation
++
+ import freechips.rocketchip.config.Parameters
+ import freechips.rocketchip.rocket
+ import freechips.rocketchip.tilelink._
+@@ -288,6 +291,19 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
+   var ldq_full = Bool()
+   var stq_full = Bool()
+ 
++  val fuzz_ldq_full = Wire(Bool())
++  fuzz_ldq_full := WrapInc(ld_enq_idx, numLdqEntries) === ldq_head
++  annotate(new ChiselAnnotation{
++    override def toFirrtl = AttributeAnnotation(fuzz_ldq_full.toTarget, """ SURGE_FREQ """)
++  })
++  val debug_ldq_full_counter = RegInit(0.U(10.W))
++  when (fuzz_ldq_full) {
++    debug_ldq_full_counter := debug_ldq_full_counter + 1.U
++  } .otherwise {
++    debug_ldq_full_counter := 0.U
++  }
++  assert(debug_ldq_full_counter < 1000.U)
++
+   for (w <- 0 until coreWidth)
+   {
+     ldq_full = WrapInc(ld_enq_idx, numLdqEntries) === ldq_head

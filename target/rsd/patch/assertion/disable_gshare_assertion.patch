@@ -1,0 +1,41 @@
+diff --git a/Processor/Src/FetchUnit/Gshare.sv b/Processor/Src/FetchUnit/Gshare.sv
+index 980624e..e95f2a8 100644
+--- a/Processor/Src/FetchUnit/Gshare.sv
++++ b/Processor/Src/FetchUnit/Gshare.sv
+@@ -79,7 +79,8 @@ module Gshare(
+         );
+         
+         QueuePointer #(
+-            .SIZE( PHT_QUEUE_SIZE )
++            .SIZE( PHT_QUEUE_SIZE ),
++            .ASSERT_ON( 0 )
+         )
+         phtQueuePointer(
+             .clk(port.clk),
+diff --git a/Processor/Src/Primitives/Queue.sv b/Processor/Src/Primitives/Queue.sv
+index c92cc7a..c8a0ded 100644
+--- a/Processor/Src/Primitives/Queue.sv
++++ b/Processor/Src/Primitives/Queue.sv
+@@ -18,7 +18,8 @@ module QueuePointer #( parameter
+     SIZE = 1,
+     INITIAL_HEAD_PTR = 0,
+     INITIAL_TAIL_PTR = 0,
+-    INITIAL_COUNT = 0
++    INITIAL_COUNT = 0,
++    ASSERT_ON = 1
+ )(
+ input
+     logic clk,
+@@ -90,8 +91,10 @@ output
+     end
+ 
+     // Assertion
+-    `RSD_ASSERT_CLK(clk, !(full && push), "Push to a full queue.");
+-    `RSD_ASSERT_CLK(clk, !(empty && pop), "Pop from an empty queue.");
++    if (ASSERT_ON) begin
++        `RSD_ASSERT_CLK(clk, !(full && push), "Push to a full queue.");
++        `RSD_ASSERT_CLK(clk, !(empty && pop), "Pop from an empty queue.");
++    end
+ endmodule
+ 
+ //

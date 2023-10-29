@@ -1,0 +1,15 @@
+diff --git src/main/scala/naxriscv/lsu/LsuPlugin.scala src/main/scala/naxriscv/lsu/LsuPlugin.scala
+index 9afe631..4f9aab8 100644
+--- src/main/scala/naxriscv/lsu/LsuPlugin.scala
++++ src/main/scala/naxriscv/lsu/LsuPlugin.scala
+@@ -615,6 +615,10 @@ class LsuPlugin(var lqSize: Int,
+         val onFreeLast = onFree.stage()
+ 
+         setup.postCommitBusy setWhen(commit =/= free)
++
++        val usageNext = UInt(log2Up(sqSize+1) bits)
++        val usage = RegNext(usageNext) init (0) addAttribute("SURGE_COUNT")
++        usageNext := alloc - free
+       }
+ 
+       val tracker = new Area{

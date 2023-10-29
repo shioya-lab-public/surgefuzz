@@ -1,0 +1,53 @@
+diff --git a/Processor/Src/Memory/MemoryMapTypes.sv b/Processor/Src/Memory/MemoryMapTypes.sv
+index b461eb1..c9205a6 100644
+--- a/Processor/Src/Memory/MemoryMapTypes.sv
++++ b/Processor/Src/Memory/MemoryMapTypes.sv
+@@ -14,10 +14,10 @@ import BasicTypes::*;
+ //
+ // Related to instructions 
+ //
+-localparam INSN_RESET_VECTOR = 32'h00001000;
++localparam INSN_RESET_VECTOR = 32'h00002000;
+ 
+ // The processor stops when it reaches PC_GOAL
+-localparam PC_GOAL = 32'h80001004;
++localparam PC_GOAL = 32'h80002004;
+ 
+ //
+ // PC
+diff --git a/Processor/Src/Verification/TestCode/Makefile.inc b/Processor/Src/Verification/TestCode/Makefile.inc
+index 8444191..c92514d 100644
+--- a/Processor/Src/Verification/TestCode/Makefile.inc
++++ b/Processor/Src/Verification/TestCode/Makefile.inc
+@@ -107,8 +107,8 @@ $(DUMMY_ROM):
+ 
+ # 生成するバイナリのアドレス
+ # RAM は ローダでROMから必要なデータをコピーしたり初期化したりするので関係ない
+-ROM_PADDING_SIZE = 4096 # 0x1000
+-ROM_START_ADDR = 0x00001000
++ROM_PADDING_SIZE = 8192 # 0x2000
++ROM_START_ADDR = 0x00002000
+ ROM_END_ADDR   = 0x00010000
+ 
+ ROM_SIZE   = 65536      # 0x1000 + (0x10000 - 0x1000) = 0x10000
+diff --git a/Processor/Src/Verification/TestCode/rsd-ld.script b/Processor/Src/Verification/TestCode/rsd-ld.script
+index 802c879..9254573 100644
+--- a/Processor/Src/Verification/TestCode/rsd-ld.script
++++ b/Processor/Src/Verification/TestCode/rsd-ld.script
+@@ -6,10 +6,15 @@ ENTRY(_start);
+ 
+ 
+ MEMORY {
+-    ROM(rxai) :     ORIGIN = 0x00001000, LENGTH = 32k
++    ROM(rxai) :     ORIGIN = 0x00002000, LENGTH = 32k
+     RAM(wa) :       ORIGIN = 0x80000000, LENGTH = 32k
+ }
+ 
++/* The tohost/fromhost address is used by Spike.
++   We don't these address, so tohost/fromhost is set to some dummy value. */
++tohost = 0x2f00;
++fromhost = 0x2f08;
++
+ SECTIONS
+ {
+     .text : { *(.text) }     > ROM

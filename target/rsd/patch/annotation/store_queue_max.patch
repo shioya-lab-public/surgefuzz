@@ -1,0 +1,13 @@
+diff --git a/Processor/Src/LoadStoreUnit/StoreQueue.sv b/Processor/Src/LoadStoreUnit/StoreQueue.sv
+index 6dff383..6edb5ca 100644
+--- a/Processor/Src/LoadStoreUnit/StoreQueue.sv
++++ b/Processor/Src/LoadStoreUnit/StoreQueue.sv
+@@ -62,7 +62,7 @@ module StoreQueue(
+ 
+     // FIFO controller.
+     RenameLaneCountPath pushCount;
+-    StoreQueueCountPath curCount;
++    (* SURGE_COUNT *) StoreQueueCountPath curCount;
+     logic push;
+ 
+     // Parameter: Size, Initial head pos., Initial tail pos., Initial count

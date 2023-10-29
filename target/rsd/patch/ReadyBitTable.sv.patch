@@ -1,0 +1,27 @@
+diff --git a/Processor/Src/Scheduler/ReadyBitTable.sv b/Processor/Src/Scheduler/ReadyBitTable.sv
+index adbd56c..e3b1235 100644
+--- a/Processor/Src/Scheduler/ReadyBitTable.sv
++++ b/Processor/Src/Scheduler/ReadyBitTable.sv
+@@ -48,10 +48,18 @@ module ReadyBitTable #(
+     RegNumPath readyRA[READY_READ_NUM];
+ 
+     DistributedMultiPortRAM #(
+-        1 << REG_NUM_BIT_WIDTH, 1, READY_READ_NUM, READY_WRITE_NUM
+-    )
+-    radyBitTable(clk, readyWE, readyWA, readyWV, readyRA, readyRV);
+-
++        .ENTRY_NUM( 1 << REG_NUM_BIT_WIDTH ),
++        .ENTRY_BIT_SIZE( 1 ),
++        .READ_NUM( READY_READ_NUM ),
++        .WRITE_NUM( READY_WRITE_NUM )
++    ) radyBitTable (
++        .clk( clk ),
++        .we( readyWE ),
++        .wa( readyWA ),
++        .wv( readyWV ),
++        .ra( readyRA ),
++        .rv( readyRV )
++    );
+ 
+     RegNumPath resetIndex;
+ 

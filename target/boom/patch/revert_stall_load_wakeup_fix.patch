@@ -1,0 +1,20 @@
+diff --git src/main/scala/lsu/lsu.scala src/main/scala/lsu/lsu.scala
+index 1f17835d..cc0bcf94 100644
+--- src/main/scala/lsu/lsu.scala
++++ src/main/scala/lsu/lsu.scala
+@@ -1194,6 +1194,7 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
+   // Avoid deadlock with a 1-w LSU prioritizing load wakeups > store commits
+   // On a 2W machine, load wakeups and store commits occupy separate pipelines,
+   // so only add this logic for 1-w LSU
++  /*
+   if (memWidth == 1) {
+     // Wakeups may repeatedly find a st->ld addr conflict and fail to forward,
+     // repeated wakeups may block the store from ever committing
+@@ -1213,6 +1214,7 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
+       block_load_wakeup := true.B
+     }
+   }
++  */
+ 
+ 
+   // Task 3: Clr unsafe bit in ROB for succesful translations

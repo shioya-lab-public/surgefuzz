@@ -1,0 +1,32 @@
+diff --git src/test/cpp/naxriscv/src/main.cpp src/test/cpp/naxriscv/src/main.cpp
+index 78f8317..9014960 100644
+--- src/test/cpp/naxriscv/src/main.cpp
++++ src/test/cpp/naxriscv/src/main.cpp
+@@ -4,6 +4,8 @@
+ #include "VNaxRiscv.h"
+ #include "VNaxRiscv_NaxRiscv.h"
+ 
++#include "fuzz_driver.hpp"
++
+ #include <stdio.h>
+ #include <iostream>
+ #include <stdlib.h>
+@@ -2016,6 +2015,8 @@ void simSlaveTick(){
+ 
+ 
+ void simLoop(){
++    RegisterRecorder recorder("/out/profile/dependents.csv");
++
+     try {
+         top->clk = 0;
+ 
+@@ -2184,6 +2185,9 @@ void simLoop(){
+                     if(spike_enabled) spikeSyncTrap();
+                 }
+                 top->eval();
++                if (main_time > 10) {
++                    recorder.call_per_one_cycle(whitebox->nax->coverage_target, whitebox->nax->fuzz_ancestors, main_time);
++                }
+                 if(Verilated::gotFinish()) failure();
+                 for(SimElement* simElement : simElements) if(!top->reset || simElement->withoutReset) simElement->postCycle();
+             }

@@ -1,0 +1,52 @@
+diff --git emulator.cc emulator.cc
+index 40b5a2fa..6de06571 100644
+--- emulator.cc
++++ emulator.cc
+@@ -21,6 +21,12 @@
+ #include <unistd.h>
+ #include <getopt.h>
+ 
++#include "VTestHarness.h"
++#include "VTestHarness_TestHarness.h"
++#include "VTestHarness_ChipTop.h"
++
++#include "fuzz_driver.hpp"
++
+ // For option parsing, which is split across this file, Verilog, and
+ // FESVR's HTIF, a few external files must be pulled in. The list of
+ // files and what they provide is enumerated:
+@@ -328,6 +334,8 @@ done_processing:
+   tile->reset = 0;
+   done_reset = true;
+ 
++  RegisterRecorder recorder("/out/profile/dependents.csv");
++
+   do {
+     tile->clock = 0;
+     tile->eval();
+@@ -339,6 +347,7 @@ done_processing:
+ 
+     tile->clock = 1;
+     tile->eval();
++    recorder.call_per_one_cycle(tile->TestHarness->chiptop->coverage_target, tile->TestHarness->chiptop->fuzz_ancestors, trace_count);
+ #if VM_TRACE
+     if (dump)
+       tfp->dump(static_cast<vluint64_t>(trace_count * 2 + 1));
+@@ -368,7 +377,7 @@ done_processing:
+   else if (tsi && tsi->exit_code())
+   {
+     fprintf(stderr, "*** FAILED *** (code = %d, seed %d) after %ld cycles\n", tsi->exit_code(), random_seed, trace_count);
+-    ret = tsi->exit_code();
++    ret = 0;
+   }
+   else if (jtag && jtag->exit_code())
+   {
+@@ -378,7 +387,7 @@ done_processing:
+   else if (trace_count == max_cycles)
+   {
+     fprintf(stderr, "*** FAILED *** via trace_count (timeout, seed %d) after %ld cycles\n", random_seed, trace_count);
+-    ret = 2;
++    ret = 0;
+   }
+   else if (verbose || print_cycles)
+   {

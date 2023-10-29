@@ -1,0 +1,32 @@
+diff --git rsd/Processor/Src/Recovery/RecoveryManager.sv rsd/Processor/Src/Recovery/RecoveryManager.sv
+index 0460439..9438c1e 100644
+--- rsd/Processor/Src/Recovery/RecoveryManager.sv
++++ rsd/Processor/Src/Recovery/RecoveryManager.sv
+@@ -71,7 +71,26 @@ module RecoveryManager(
+     ActiveListIndexPath exceptionOpPtr;
+ 
+     // 例外が検出された後リカバリ状態に移行する
+-    logic exceptionDetected;
++    (* SURGE_FREQ *) logic exceptionDetected;
++
++    logic [9:0] exceptionDetectedCount;
++    always_ff@(posedge port.clk) begin  // synchronous rst
++        if (!port.rst) begin
++            exceptionDetectedCount <= '0;
++        end
++        else begin
++            if (exceptionDetected) begin
++                exceptionDetectedCount = exceptionDetectedCount + 1;
++            end else begin
++                exceptionDetectedCount = '0;
++            end
++        end
++    end
++    `RSD_ASSERT_CLK(
++        port.clk,
++        (exceptionDetectedCount < 1000),
++        "Maybe deadlock exceptionDetected."
++    );
+ 
+     always_ff@(posedge port.clk) begin  // synchronous rst
+         if (!port.rst) begin

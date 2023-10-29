@@ -1,0 +1,34 @@
+diff --git rsd/Processor/Src/Cache/DCache.sv rsd/Processor/Src/Cache/DCache.sv
+index fb8dfce..917cf7d 100644
+--- rsd/Processor/Src/Cache/DCache.sv
++++ rsd/Processor/Src/Cache/DCache.sv
+@@ -148,9 +148,28 @@ module DCacheController(DCacheIF.DCacheController port);
+     // For flush
+     logic dcFlushReqAck;
+     logic dcFlushComplete;
+-    logic mshrBusy;
++    (* SURGE_CONSEC*) logic mshrBusy;
+     logic loadStoreBusy;
+ 
++    reg [9:0] mshrBusyCount;
++    always_ff @(posedge port.clk) begin
++        if (port.rst) begin
++            mshrBusyCount = '0;
++        end
++        else begin
++            if (mshrBusy) begin
++                mshrBusyCount = mshrBusyCount + 1;
++            end else begin
++                mshrBusyCount = '0;
++            end
++        end
++    end
++    `RSD_ASSERT_CLK(
++        port.clk,
++        (mshrBusyCount < 1000),
++        "Maybe deadlock mshrBusy."
++    );
++
+     // DCache phase
+     always_ff @(posedge port.clk) begin
+         if (port.rst) begin

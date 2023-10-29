@@ -1,0 +1,34 @@
+diff --git src/main/scala/lsu/lsu.scala src/main/scala/lsu/lsu.scala
+index 1f17835d..4d27d4ab 100644
+--- src/main/scala/lsu/lsu.scala
++++ src/main/scala/lsu/lsu.scala
+@@ -46,6 +46,9 @@ package boom.lsu
+ import chisel3._
+ import chisel3.util._
+ 
++import chisel3.experimental.{ChiselAnnotation, annotate}
++import firrtl.AttributeAnnotation
++
+ import freechips.rocketchip.config.Parameters
+ import freechips.rocketchip.rocket
+ import freechips.rocketchip.tilelink._
+@@ -514,6 +517,20 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
+                                                                           ldq_head === ldq_wakeup_idx &&
+                                                                           ldq_wakeup_e.bits.st_dep_mask.asUInt === 0.U))))
+ 
++  val store_blocked = can_fire_store_commit(0) & !will_fire_store_commit(0)
++  dontTouch(store_blocked)
++  annotate(new ChiselAnnotation{
++    override def toFirrtl = AttributeAnnotation(store_blocked.toTarget, """ SURGE_CONSEC """)
++  })
++
++  val debug_store_blocked_counter = RegInit(0.U(10.W))
++  when (store_blocked) {
++    debug_store_blocked_counter := debug_store_blocked_counter + 1.U
++  } .otherwise {
++    debug_store_blocked_counter := 0.U
++  }
++  assert(debug_store_blocked_counter < 1000.U);
++
+   // Can we fire an incoming hellacache request
+   val can_fire_hella_incoming  = WireInit(widthMap(w => false.B)) // This is assigned to in the hellashim ocntroller

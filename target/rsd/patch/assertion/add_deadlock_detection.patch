@@ -1,0 +1,68 @@
+diff --git a/Processor/Src/Cache/DCache.sv b/Processor/Src/Cache/DCache.sv
+index fb8dfce..1d38519 100644
+--- a/Processor/Src/Cache/DCache.sv
++++ b/Processor/Src/Cache/DCache.sv
+@@ -1880,6 +1880,30 @@ module DCacheMissHandler(
+         end // for (int i = 0; i < MSHR_NUM; i++) begin
+     end
+ 
++`ifdef RSD_FUNCTIONAL_SIMULATION
++    localparam MSHR_DEADLOCK_DETECT_CYCLES = 500;
++    integer cycles[MSHR_NUM];
++    always_ff @(posedge port.clk) begin
++        for (int i = 0; i < MSHR_NUM; i++) begin
++            if (port.rst || !mshr[i].valid ) begin
++                cycles[i] <= 0;
++            end
++            else begin
++                cycles[i] <= cycles[i] + 1;
++            end
++        end
++    end
++
++    generate
++        for (genvar i = 0; i < MSHR_NUM; i++) begin
++            `RSD_ASSERT_CLK(
++                port.clk,
++                !(cycles[i] > MSHR_DEADLOCK_DETECT_CYCLES),
++                "MSHR deadlock detected"
++            );
++        end
++    endgenerate
++`endif
+ 
+ 
+ endmodule : DCacheMissHandler
+diff --git a/Processor/Src/Pipeline/CommitStage.sv b/Processor/Src/Pipeline/CommitStage.sv
+index d5695c6..711d11b 100644
+--- a/Processor/Src/Pipeline/CommitStage.sv
++++ b/Processor/Src/Pipeline/CommitStage.sv
+@@ -363,6 +363,28 @@ module CommitStage(
+             );
+         end
+     endgenerate
++`ifdef RSD_FUNCTIONAL_SIMULATION
++    localparam DEADLOCK_DETECT_CYCLES = 3000;
++    integer cycles;
++    always_ff @(posedge port.clk) begin
++        if (port.rst || commit[0]) begin
++            cycles <= 0;
++        end
++        else begin
++            cycles <= cycles + 1;
++        end
++    end
++
++
++    generate
++        `RSD_ASSERT_CLK(
++            port.clk,
++            !(cycles > DEADLOCK_DETECT_CYCLES),
++            "Deadlock detected"
++        );
++    endgenerate
++
++`endif
+ 
+ endmodule : CommitStage
+ 

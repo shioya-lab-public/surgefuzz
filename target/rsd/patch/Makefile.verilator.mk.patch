@@ -1,0 +1,85 @@
+diff --git a/Processor/Src/Makefile.verilator.mk b/Processor/Src/Makefile.verilator.mk
+index aa029f6..76abed8 100644
+--- a/Processor/Src/Makefile.verilator.mk
++++ b/Processor/Src/Makefile.verilator.mk
+@@ -34,7 +34,20 @@ DEBUG_HELPERS = \
+ 
+ DEPS_RTL = \
+ 	$(TYPES:%=$(SOURCE_ROOT)%) \
+-	$(MODULES:%=$(SOURCE_ROOT)%) \
++	$(CORE_CODE) \
++	$(OUT)/RAM_with_comment.v \
++	Memory/Memory.sv \
++	Primitives/Queue.sv \
++	Main_Zynq_Wrapper.sv \
++	Main_Zynq.sv \
++	Memory/Axi4LiteControlRegisterIF.sv \
++	Memory/Axi4LiteControlRegister.sv \
++	Memory/ControlQueue.sv \
++	Memory/Axi4Memory.sv \
++	Memory/Axi4MemoryIF.sv \
++	Memory/MemoryReadReqQueue.sv \
++	Memory/MemoryWriteDataQueue.sv \
++	Memory/MemoryLatencySimulator.sv \
+ 	$(DEBUG_HELPERS:%=$(SOURCE_ROOT)%) \
+ 	# $(TEST_MODULES:%=$(SOURCE_ROOT)%) \
+ 
+@@ -43,6 +56,10 @@ VERILATOR_DISABLED_WARNING = \
+      -Wno-WIDTH \
+      -Wno-INITIALDLY \
+      -Wno-UNOPTFLAT \
++     -Wno-LITENDIAN \
++     -Wno-LATCH \
++     -Wno-CASEOVERLAP \
++     -Wno-UNSIGNED \
+ 
+ # RSD specific constants
+ # RSD_SRC_CFG is defined in Makefiles/CoreSources.inc.mk
+@@ -58,7 +75,6 @@ RSD_VERILATOR_DEFINITION = \
+ # See https://www.veripool.org/papers/Verilator_Accelerated_OSDA2020.pdf
+ VERILATOR_OPTION = \
+ 	--cc \
+-	--assert \
+ 	-sv \
+ 	--exe ./SysDeps/Verilator/TestMain.cpp \
+ 	--top-module $(TOP_MODULE) \
+@@ -67,18 +83,38 @@ VERILATOR_OPTION = \
+ 	--Mdir $(LIBRARY_WORK_RTL) \
+ 	+incdir+. \
+ 	--trace \
+-	-CFLAGS -Os \
++	-CFLAGS "-Os -fconcepts" \
++	-I$(DRIVER_ROOT)/include \
+ 	-output-split 15000 \
+ 	#-CFLAGS "-O0 -g" \
+ 	#--MMD \
+ 	#-O3 \
+ 
++ifeq ($(ENABLE_SIM_ASSERTION), 1)
++	VERILATOR_OPTION += --assert
++endif
++
+ VERILATOR_TARGET_CXXFLAGS= \
+ 	-D RSD_FUNCTIONAL_SIMULATION_VERILATOR \
+ 	-D RSD_FUNCTIONAL_SIMULATION \
+ 	-D RSD_VERILATOR_TRACE \
+ 	-D RSD_MARCH_UNIFIED_MULDIV_MEM_PIPE \
+ 	-Wno-attributes \
++	-I$(DRIVER_ROOT)/include \
++
++ifeq ($(FUZZER), surgefuzz)
++	VERILATOR_TARGET_CXXFLAGS += -DFUZZER_SURGEFUZZ
++else ifeq ($(FUZZER), rfuzz)
++	VERILATOR_TARGET_CXXFLAGS += -DFUZZER_RFUZZ
++else ifeq ($(FUZZER), difuzzrtl)
++	VERILATOR_TARGET_CXXFLAGS += -DFUZZER_DIFUZZRTL
++else ifeq ($(FUZZER), directfuzz)
++	VERILATOR_TARGET_CXXFLAGS += -DFUZZER_DIRECTFUZZ
++else ifeq ($(FUZZER), blackbox)
++	VERILATOR_TARGET_CXXFLAGS += -DFUZZER_BLACKBOX
++else
++	$(error FUZZER is not set)
++endif
+ 
+ all: $(LIBRARY_WORK_RTL) $(DEPS_RTL) Makefiles/CoreSources.inc.mk
+ 	$(VERILATOR_BIN) $(VERILATOR_OPTION) $(DEPS_RTL)

@@ -1,0 +1,28 @@
+diff --git sims/verilator/Makefile sims/verilator/Makefile
+index a1186acc..518f5042 100644
+--- sims/verilator/Makefile
++++ sims/verilator/Makefile
+@@ -184,6 +184,23 @@ VERILATOR_CXXFLAGS = \
+ 	-include $(build_dir)/$(long_name).plusArgs \
+ 	-include $(build_dir)/verilator.h
+ 
++ 
++VERILATOR_CXXFLAGS += -I$(DRIVER_ROOT)/include
++
++ifeq ($(FUZZER), surgefuzz)
++	VERILATOR_CXXFLAGS += -DFUZZER_SURGEFUZZ
++else ifeq ($(FUZZER), rfuzz)
++	VERILATOR_CXXFLAGS += -DFUZZER_RFUZZ
++else ifeq ($(FUZZER), difuzzrtl)
++	VERILATOR_CXXFLAGS += -DFUZZER_DIFUZZRTL
++else ifeq ($(FUZZER), directfuzz)
++	VERILATOR_CXXFLAGS += -DFUZZER_DIRECTFUZZ
++else ifeq ($(FUZZER), blackbox)
++	VERILATOR_CXXFLAGS += -DFUZZER_BLACKBOX
++else
++	$(error FUZZER is not set)
++endif
++
+ VERILATOR_LDFLAGS = $(SIM_LDFLAGS)
+ 
+ VERILATOR_CC_OPTS = \

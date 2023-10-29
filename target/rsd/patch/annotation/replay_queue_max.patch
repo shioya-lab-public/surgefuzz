@@ -1,0 +1,13 @@
+diff --git rsd/Processor/Src/Scheduler/ReplayQueue.sv rsd/Processor/Src/Scheduler/ReplayQueue.sv
+index 02b72bb..2a40091 100644
+--- rsd/Processor/Src/Scheduler/ReplayQueue.sv
++++ rsd/Processor/Src/Scheduler/ReplayQueue.sv
+@@ -75,7 +75,7 @@ module ReplayQueue(
+     // because ISSUE_QUEUE_MEM_LATENCY entries will pushed to ReplayQueue at most
+     // after schedule and issue stage stall.
+     logic almostFull;
+-    ReplayQueueCountPath count;
++    (* SURGE_COUNT *) ReplayQueueCountPath count;
+ 
+     // size, initial head, initial tail, initial count
+     QueuePointerWithEntryCount #( REPLAY_QUEUE_ENTRY_NUM, 0, 0, 0 )

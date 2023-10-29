@@ -1,0 +1,27 @@
+diff --git src/main/scala/naxriscv/Gen.scala src/main/scala/naxriscv/Gen.scala
+index 3e676ae..765216c 100644
+--- src/main/scala/naxriscv/Gen.scala
++++ src/main/scala/naxriscv/Gen.scala
+@@ -213,8 +213,8 @@ object Config{
+       )
+       plugins += new DataCachePlugin(
+         memDataWidth = 64,
+-        cacheSize    = 4096*4,
+-        wayCount     = 4,
++        cacheSize    = 256*2,
++        wayCount     = 2,
+         refillCount = 2,
+         writebackCount = 2,
+         tagsReadAsync = withDistributedRam,
+diff --git src/main/scala/naxriscv/lsu/DataCache.scala src/main/scala/naxriscv/lsu/DataCache.scala
+index c8f1a94..3486e4a 100644
+--- src/main/scala/naxriscv/lsu/DataCache.scala
++++ src/main/scala/naxriscv/lsu/DataCache.scala
+@@ -1261,7 +1261,8 @@ class DataCache(val cacheSize: Int,
+     pipeline.build()
+   }
+ 
++  val waysHitHazard = load.ctrl.waysHitHazard | store.ctrl.waysHitHazard addAttribute("SURGE_FREQ")
+ 
+   io.refillEvent := refill.push.valid
+   io.writebackEvent := writeback.push.valid

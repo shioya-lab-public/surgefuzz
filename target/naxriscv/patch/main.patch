@@ -1,0 +1,68 @@
+diff --git src/test/cpp/naxriscv/src/main.cpp src/test/cpp/naxriscv/src/main.cpp
+index 78f8317..666c931 100644
+--- src/test/cpp/naxriscv/src/main.cpp
++++ src/test/cpp/naxriscv/src/main.cpp
+@@ -4,6 +4,8 @@
+ #include "VNaxRiscv.h"
+ #include "VNaxRiscv_NaxRiscv.h"
+ 
++#include "fuzz_driver.hpp"
++
+ #include <stdio.h>
+ #include <iostream>
+ #include <stdlib.h>
+@@ -816,6 +818,7 @@ public:
+     // should return NULL for MMIO addresses
+     virtual char* addr_to_mem(reg_t addr)  {
+         if((addr & 0xE0000000) == 0x00000000) return NULL;
++        // if (0x10000000 <= addr && addr <= 0x20000000) return NULL;
+         return (char*)memory.get(addr);
+     }
+     // used for MMIO addresses
+@@ -2014,8 +2017,10 @@ void simSlaveTick(){
+     }
+ }
+ 
+-
++template<typename T>
+ void simLoop(){
++    T fuzz_driver;
++
+     try {
+         top->clk = 0;
+ 
+@@ -2184,6 +2189,11 @@ void simLoop(){
+                     if(spike_enabled) spikeSyncTrap();
+                 }
+                 top->eval();
++
++                if (main_time > 10 && last_commit_pc >= 0x80000300 && last_commit_pc <= 0x80000600) { // state->pc
++                    fuzz_driver.call_per_one_cycle(whitebox->nax);
++                }
++
+                 if(Verilated::gotFinish()) failure();
+                 for(SimElement* simElement : simElements) if(!top->reset || simElement->withoutReset) simElement->postCycle();
+             }
+@@ -2251,7 +2261,21 @@ int main(int argc, char** argv, char** env){
+         rtlInit();
+         parseArgsSecond(argc, argv);
+         simMasterSlaveInit();
+-        simLoop();
++
++        #if defined (FUZZER_SURGEFUZZ)
++        simLoop<SurgeFuzzDriver>();
++        #elif defined (FUZZER_RFUZZ)
++        simLoop<FuzzDriver<RFuzz>>();
++        #elif defined (FUZZER_DIFUZZRTL)
++        simLoop<FuzzDriver<DifuzzRTL>>();
++        #elif defined (FUZZER_DIRECTFUZZ)
++        simLoop<FuzzDriver<DirectFuzz>>();
++        #elif defined (FUZZER_BLACKBOX)
++        simLoop<FuzzDriver<Blackbox>>();
++        #else
++        #error "Unsupported fuzzer"
++        #endif
++
+     } catch (const std::exception& e) {
+         if(!passFailWritten){
+             printf("FAILURE %s\n", simName.c_str());
