@@ -149,7 +149,7 @@ RUN make -C ${DRIVER_ROOT} test -j$(nproc)
 RUN make -C ${FUZZER_ROOT} -j$(nproc)
 
 # Install python packages
-RUN pip install --upgrade pip && \
+RUN pip install --upgrade pip minepy && \
     pip install -r ${SCRIPT_ROOT}/prepare/requirements.txt
 
 # Install python packages for SurgeFuzz
